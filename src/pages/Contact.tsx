@@ -48,13 +48,20 @@ export default function Contact() {
     }
 
     setStatus("submitting");
+    const ctrl = new AbortController();
+    const timer = window.setTimeout(() => ctrl.abort(), 20000);
     try {
-      const res = await fetch(formEndpoint, { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify(payload) });
-      if (!res.ok) throw new Error(String(res.status));
+      const res = await fetch(formEndpoint, { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify(payload), signal: ctrl.signal });
+      let data: { success?: string | boolean } | null = null;
+      try { data = await res.json(); } catch { /* reply was not JSON */ }
+      const ok = res.ok && (data === null ? false : data.success === true || data.success === "true");
+      if (!ok) throw new Error(String(res.status));
       setStatus("success");
       formRef.current?.reset();
     } catch {
       setStatus("error");
+    } finally {
+      window.clearTimeout(timer);
     }
   }
 
