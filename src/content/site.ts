@@ -19,7 +19,7 @@ export const site = {
     formEndpoint: "https://formsubmit.co/ajax/pmehruf@gmail.com",
     // Faster option: a free Web3Forms access key (get one at web3forms.com, it is emailed to you).
     // When this is filled in, the form uses Web3Forms instead of FormSubmit. The key is meant to be public.
-    web3formsKey: "",
+    web3formsKey: "a189d6dd-f654-4889-88c1-4797836c7c39",
   },
 };
 
