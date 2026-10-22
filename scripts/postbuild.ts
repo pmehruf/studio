@@ -30,7 +30,7 @@ function render(p: (typeof pages)[number]) {
     .replace(/(<meta property="og:description" content=")[^"]*(")/, `$1${esc(p.description)}$2`);
   if (base) {
     html = html
-      .replace('</head>', `    <link rel="canonical" href="${base}${p.path === "/" ? "" : p.path}" />\n    <meta property="og:url" content="${base}${p.path === "/" ? "" : p.path}" />\n  </head>`)
+      .replace('</head>', `    <link rel="canonical" href="${base}${p.path === "/" ? "/" : p.path}" />\n    <meta property="og:url" content="${base}${p.path === "/" ? "/" : p.path}" />\n  </head>`)
       .replace('content="/og-image.png"', `content="${base}/og-image.png"`);
   }
   return html;
@@ -44,7 +44,7 @@ for (const p of pages) {
 writeFileSync(join(dist, "404.html"), template);
 
 if (base) {
-  const urls = pages.map((p) => `  <url><loc>${base}${p.path === "/" ? "" : p.path}</loc></url>`).join("\n");
+  const urls = pages.map((p) => `  <url><loc>${base}${p.path === "/" ? "/" : p.path}</loc></url>`).join("\n");
   writeFileSync(join(dist, "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`);
   writeFileSync(join(dist, "robots.txt"), `User-agent: *\nAllow: /\nSitemap: ${base}/sitemap.xml\n`);
   console.log(`postbuild: ${pages.length} pages + sitemap for ${base}`);
