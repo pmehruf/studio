@@ -2,7 +2,7 @@ import { FormEvent, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useMeta } from "../hooks/useMeta";
 import { WhatsAppIcon } from "../components/Icon";
-import { formEndpoint, site, whatsappLink } from "../content/site";
+import { formEndpoint, site, web3formsKey, whatsappLink } from "../content/site";
 import { services } from "../content/services";
 import { SectionHead } from "../components/Bits";
 
@@ -40,7 +40,7 @@ export default function Contact() {
     const svcLabel = v("service") === NOT_SURE ? "Not sure which service fits" : services.find((s) => s.slug === v("service"))?.title ?? "";
     const payload = { name: v("name"), email: v("email"), message: v("message"), service: svcLabel, budget: v("budget"), timeline: v("timeline"), _subject: `New project enquiry from ${v("name")}`, _replyto: v("email"), _template: "table", _captcha: "false" };
 
-    if (!formEndpoint) {
+    if (!formEndpoint && !web3formsKey) {
       const body = `${payload.message}\n\n— ${payload.name} (${payload.email})\nService: ${svcLabel || "-"}\nBudget: ${payload.budget || "-"}\nTimeline: ${payload.timeline || "-"}`;
       setMailto(`mailto:${site.contact.email}?subject=${encodeURIComponent("Project enquiry")}&body=${encodeURIComponent(body)}`);
       setStatus("unconfigured");
@@ -49,9 +49,14 @@ export default function Contact() {
 
     setStatus("submitting");
     const ctrl = new AbortController();
-    const timer = window.setTimeout(() => ctrl.abort(), 20000);
+    const timer = window.setTimeout(() => ctrl.abort(), 75000);
     try {
-      const res = await fetch(formEndpoint, { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify(payload), signal: ctrl.signal });
+      const useW3 = Boolean(web3formsKey);
+      const url = useW3 ? "https://api.web3forms.com/submit" : formEndpoint;
+      const body = useW3
+        ? { access_key: web3formsKey, subject: payload._subject, from_name: payload.name, name: payload.name, email: payload.email, message: payload.message, service: payload.service, budget: payload.budget, timeline: payload.timeline }
+        : payload;
+      const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify(body), signal: ctrl.signal });
       let data: { success?: string | boolean } | null = null;
       try { data = await res.json(); } catch { /* reply was not JSON */ }
       const ok = res.ok && (data === null ? false : data.success === true || data.success === "true");
@@ -143,7 +148,7 @@ export default function Contact() {
                 <p><a className="btn btn-secondary" href={mailto}>Send it by email instead</a></p>
               </div>
             )}
-            <button type="submit" className="btn btn-primary btn-lg" disabled={busy}>{busy ? "Sending…" : "Tell Me About Your Project"}</button>
+            <button type="submit" className="btn btn-primary btn-lg" disabled={busy}>{busy ? "Sending… this can take up to a minute" : "Tell Me About Your Project"}</button>
           </form>
         </div>
       </section>
